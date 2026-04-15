@@ -22,7 +22,7 @@
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .header img {
             width: 32px;
@@ -34,32 +34,32 @@
             display: inline-block;
             margin: 0;
             color: #1e88e5;
-            font-size: 2em;
+            font-size: 2.1em;
         }
         h2 {
             text-align: center;
             color: #555;
-            margin: 10px 0 25px 0;
+            margin: 8px 0 25px 0;
         }
         .prayer-time {
             background: #f8fbff;
             padding: 15px;
-            margin: 10px 0;
+            margin: 12px 0;
             border-radius: 8px;
             border-left: 5px solid #1e88e5;
             font-size: 1.1em;
         }
         .setting-box {
             background: #f8fbff;
-            padding: 25px;
+            padding: 20px;
             margin: 25px 0;
             border-radius: 10px;
             text-align: center;
         }
         input[type="number"] {
-            width: 85px;
+            width: 80px;
             padding: 10px;
-            font-size: 1.4em;
+            font-size: 1.3em;
             text-align: center;
             border: 2px solid #1e88e5;
             border-radius: 8px;
@@ -73,23 +73,21 @@
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 15px;
         }
-        button:hover {
-            background: #1565c0;
-        }
-        .status {
-            text-align: center;
-            margin: 15px 0;
-            font-weight: bold;
-            color: #1e88e5;
+        button:hover { background: #1565c0; }
+        .status { 
+            text-align: center; 
+            margin: 15px 0; 
+            font-weight: bold; 
+            color: #1e88e5; 
         }
         audio { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header - kichik masjid ikonasi bilan -->
+        <!-- Kichik masjid ikonasi + Sarlavha -->
         <div class="header">
             <img src="https://i.imgur.com/8zJ0z3K.png" alt="Masjid">
             <h1>Namoz Vaqtlari</h1>
@@ -104,7 +102,7 @@
             <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz? (0 dan 20 minutgacha)</p>
             
             <input type="number" id="minutesBefore" min="0" max="20" value="10">
-            <span style="font-size: 1.2em;"> minut oldin</span><br><br>
+            <span style="font-size:1.2em;"> minut oldin</span><br><br>
             
             <button onclick="saveSettings()">Sozlamani Saqlash</button>
         </div>
@@ -114,7 +112,6 @@
     </div>
 
 <script>
-// Ma'lumotlar
 let prayerTimes = {};
 let minutesBefore = 10;
 
@@ -126,7 +123,6 @@ const prayers = [
     { name: "Xufton", audio: "azon.mp3" }
 ];
 
-// data.json yuklash
 fetch('data.json')
     .then(res => res.json())
     .then(data => {
@@ -134,19 +130,12 @@ fetch('data.json')
         loadSettings();
         renderPrayerTimes();
         startChecker();
-    })
-    .catch(() => {
-        document.getElementById('prayerTimes').innerHTML = 
-            '<p style="color:red;text-align:center;">data.json yuklanmadi!</p>';
     });
 
 function renderPrayerTimes() {
     let html = '<h2>Bugungi namoz vaqtlari</h2>';
     Object.keys(prayerTimes).forEach(name => {
-        html += `
-            <div class="prayer-time">
-                <strong>${name}</strong> — ${prayerTimes[name]}
-            </div>`;
+        html += `<div class="prayer-time"><strong>${name}</strong> — ${prayerTimes[name]}</div>`;
     });
     document.getElementById('prayerTimes').innerHTML = html;
 }
@@ -158,7 +147,6 @@ function saveSettings() {
     if (minutesBefore < 0) minutesBefore = 0;
 
     localStorage.setItem('minutesBefore', minutesBefore);
-    
     document.getElementById('status').innerHTML = '✅ Sozlama saqlandi!';
     setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
 }
@@ -178,14 +166,12 @@ function startChecker() {
 
 function checkForAzon() {
     if (minutesBefore <= 0) return;
-
     const now = new Date();
     const currentTotalMin = now.getHours() * 60 + now.getMinutes();
 
     prayers.forEach(prayer => {
         const prayerTimeStr = prayerTimes[prayer.name];
         if (!prayerTimeStr) return;
-
         const [h, m] = prayerTimeStr.split(':').map(Number);
         const prayerTotalMin = h * 60 + m;
 
@@ -198,7 +184,7 @@ function checkForAzon() {
 function playAzon(audioFile, prayerName) {
     const audio = document.getElementById('azonAudio');
     audio.src = audioFile;
-    audio.play().catch(err => console.log("Audio xatosi:", err));
+    audio.play().catch(() => {});
 }
 </script>
 </body>
