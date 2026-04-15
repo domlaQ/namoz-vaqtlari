@@ -1,0 +1,16 @@
+{
+  "last_update": "07.04.2026 17:00",
+  "masjidlar": [
+    {
+      "nomi": "Ettichinor Jome' Masjidi",
+      "manzil": "Xojaobod",
+      "vaqtlar": { 
+        "Bomdod": "05:00", 
+        "Peshin": "12:45", 
+        "Asr": "17:05", 
+        "Shom": "19:00", 
+        "Xufton": "20:25" 
+      }
+    }
+  ]
+}

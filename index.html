@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Namoz Vaqtlari</title>
+    <style>
+        :root { 
+            --gold: #e2b07e; 
+            --bg: #0a0a0a; 
+        }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            background-image: radial-gradient(circle at top, #222 0%, #0a0a0a 60%);
+            color: var(--gold); 
+            margin: 0; 
+            padding: 10px; 
+            display: flex;
+            justify-content: center;
+        }
+        .container { width: 100%; max-width: 380px; }
+        
+        .header { 
+            text-align: center; 
+            padding: 15px 0 10px 0; 
+            margin-bottom: 5px;
+        }
+        .header h1 { font-size: 1.3rem; margin: 0; font-weight: normal; opacity: 0.9; }
+
+        .m-nomi { 
+            font-size: 1.1rem; 
+            text-align: center; 
+            margin-bottom: 15px; 
+            display: block;
+            opacity: 0.8;
+        }
+
+        /* Satrlar orasini yaqinlashtirish */
+        .vaqt-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 15px; /* Satr ichidagi masofa kamaytirildi */
+            margin-bottom: 2px; /* Satrlar orasidagi masofa minimal qilindi */
+        }
+
+        .vaqt-nomi { 
+            font-size: 1.5rem; /* Katta harf */
+            font-weight: 500; 
+        }
+        .soat { 
+            font-size: 1.7rem; /* Katta son */
+            font-weight: bold; 
+            letter-spacing: 1px;
+        }
+
+        #status { 
+            text-align: center; 
+            font-size: 0.7rem; 
+            color: rgba(226, 176, 126, 0.4); 
+            margin-top: 25px;
+        }
+
+        /* Azon chalayotganda */
+        .azon-chalmoqda {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #azon-holat {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(226, 176, 126, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .test-tugma {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: var(--gold);
+            color: var(--bg);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .test-tugma:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="app"></div>
+        <div id="azon-holat"></div>
+        <button class="test-tugma" onclick="testAudio()">🔊 Azonni sinash</button>
+        <div id="status"></div>
+    </div>
+
+    <!-- Audio fayllari -->
+    <audio id="audio-bomdod" preload="auto">
+        <source src="bomdod_azoni.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="audio-umumiy" preload="auto">
+        <source src="azon.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const url = "data.json";
+        
+        // Azon chalgan vaqtlarni saqlash
+        const chalganVaqtlar = {
+            Bomdod: false,
+            Peshin: false,
+            Asr: false,
+            Shom: false,
+            Xufton: false
+        };
+
+        // Hozirgi vaqtni "HH:MM" formatda qaytarish
+        function hozirgiVaqt() {
+            const hozir = new Date();
+            const soat = String(hozir.getHours()).padStart(2, '0');
+            const daqiqa = String(hozir.getMinutes()).padStart(2, '0');
+            return `${soat}:${daqiqa}`;
+        }
+
+        // Vaqtni soniyaga aylantirish
+        function vaqtSoniyaga(vaqt) {
+            const [soat, daqiqa] = vaqt.split(':').map(Number);
+            return soat * 3600 + daqiqa * 60;
+        }
+
+        // Azon chalish
+        function azonChalish(nomozNomi) {
+            const holatDiv = document.getElementById('azon-holat');
+            
+            let audioElement;
+            if (nomozNomi === 'Bomdod') {
+                audioElement = document.getElementById('audio-bomdod');
+            } else {
+                audioElement = document.getElementById('audio-umumiy');
+            }
+
+            holatDiv.style.display = 'block';
+            holatDiv.innerHTML = `🔊 <strong>${nomozNomi}</strong> namozi vaqti bo'ldi! Azon aytilmoqda...`;
+            holatDiv.classList.add('azon-chalmoqda');
+
+            audioElement.volume = 1.0;
+            audioElement.play().catch(xatolik => {
+                console.log('Audio chalishda xato:', xatolik);
+            });
+
+            // Azon tugagach
+            audioElement.onended = function() {
+                holatDiv.classList.remove('azon-chalmoqda');
+                holatDiv.innerHTML = `✅ ${nomozNomi} namozi vaqti bo'ldi. Azon tugadi.`;
+                setTimeout(() => {
+                    holatDiv.style.display = 'none';
+                }, 30000);
+            };
+        }
+
+        // Namoz vaqtini tekshirish
+        function vaqtniTekshirish(masjid) {
+            const hozir = hozirgiVaqt();
+            const hozirSoniyada = vaqtSoniyaga(hozir);
+
+            for (let nomoz in masjid.vaqtlar) {
+                const vaqt = masjid.vaqtlar[nomoz];
+                const vaqtSoniyada = vaqtSoniyaga(vaqt);
+
+                // Agar vaqt mos kelganda va hali azon chalmagan bo'lsa
+                if (hozirSoniyada === vaqtSoniyada && !chalganVaqtlar[nomoz]) {
+                    chalganVaqtlar[nomoz] = true;
+                    azonChalish(nomoz);
+                }
+
+                // Eski timezone'ni qayta tiklash (har 1 daqiqadan keyin)
+                if (hozirSoniyada > vaqtSoniyada + 60) {
+                    chalganVaqtlar[nomoz] = false;
+                }
+            }
+        }
+
+        // Test audio
+        function testAudio() {
+            const hozir = hozirgiVaqt();
+            const soat = parseInt(hozir.split(':')[0]);
+            let audioElement;
+            
+            if (soat >= 5 && soat < 12) {
+                audioElement = document.getElementById('audio-bomdod');
+                azonChalish('Bomdod');
+            } else {
+                audioElement = document.getElementById('audio-umumiy');
+                azonChalish('Peshin');
+            }
+        }
+
+        async function yuklash() {
+            try {
+                const javob = await fetch(url + "?t=" + Date.now());
+                const m = await javob.json();
+                let html = "";
+                m.masjidlar.forEach(masjid => {
+                    // Sarlavha: Namoz vaqtlari va sana
+                    html += `<div class="header"><h1>Namoz vaqtlari: ${m.last_update.split(' ')[0]}</h1></div>`;
+                    html += `<span class="m-nomi">${masjid.nomi}</span>`;
+                    
+                    for (let v in masjid.vaqtlar) {
+                        html += `
+                        <div class="vaqt-row">
+                            <span class="vaqt-nomi">${v}</span>
+                            <span class="soat">${masjid.vaqtlar[v]}</span>
+                        </div>`;
+                    }
+                });
+                document.getElementById('app').innerHTML = html;
+                document.getElementById('status').innerText = "Yangilandi: " + m.last_update;
+
+                // Vaqtni tekshirish
+                m.masjidlar.forEach(masjid => {
+                    vaqtniTekshirish(masjid);
+                });
+
+            } catch (x) {
+                document.getElementById('app').innerHTML = "<p style='text-align:center'>Yuklashda xato...</p>";
+            }
+        }
+
+        // Har 5 soniyada vaqtni tekshirish
+        yuklash();
+        setInterval(yuklash, 60000);
+        setInterval(() => {
+            fetch(url + "?t=" + Date.now())
+                .then(r => r.json())
+                .then(m => {
+                    m.masjidlar.forEach(masjid => {
+                        vaqtniTekshirish(masjid);
+                    });
+                });
+        }, 5000);
+    </script>
+</body>
+</html>
