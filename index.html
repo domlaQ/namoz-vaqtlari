@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namoz Vaqtlari - Ettichinor Jome' Masjidi</title>
+    <title>Namoz Vaqtlari - Ettichinor</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,10 +11,6 @@
             margin: 0;
             padding: 15px;
             color: #333;
-        }
-        h1 {
-            text-align: center;
-            color: #1e88e5;
         }
         .container {
             max-width: 600px;
@@ -24,77 +20,70 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+        h1 { text-align: center; color: #1e88e5; }
+        h2 { color: #555; }
         .prayer-time {
             background: #f8fbff;
-            padding: 12px;
-            margin: 12px 0;
+            padding: 15px;
+            margin: 10px 0;
             border-radius: 8px;
             border-left: 5px solid #1e88e5;
+            font-size: 1.1em;
         }
-        .settings {
-            margin-top: 25px;
-        }
-        label {
-            display: block;
-            margin: 12px 0;
-            font-size: 1.05em;
+        .setting-box {
+            background: #f8fbff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
         }
         input[type="number"] {
-            width: 70px;
-            padding: 8px;
-            font-size: 1em;
-            border: 1px solid #1e88e5;
-            border-radius: 6px;
+            width: 80px;
+            padding: 10px;
+            font-size: 1.3em;
+            text-align: center;
+            border: 2px solid #1e88e5;
+            border-radius: 8px;
         }
         button {
             background: #1e88e5;
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 14px 30px;
             font-size: 1.1em;
             border-radius: 8px;
             cursor: pointer;
+            margin-top: 15px;
             width: 100%;
-            margin-top: 15px;
         }
-        button:hover {
-            background: #1565c0;
-        }
-        .status {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.95em;
-            color: #666;
-        }
-        audio {
-            display: none;
-        }
+        button:hover { background: #1565c0; }
+        .status { text-align: center; margin: 10px 0; font-weight: bold; }
+        audio { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🕌 Namoz Vaqtlari</h1>
-        <h2 style="text-align:center; color:#555;">Ettichinor Jome' Masjidi</h2>
-        
+        <h2 style="text-align:center;">Ettichinor Jome' Masjidi</h2>
+
         <div id="prayerTimes"></div>
 
-        <div class="settings">
+        <div class="setting-box">
             <h2>Azonni oldindan eshitish</h2>
-            <p style="color:#555; font-size:0.95em;">Har bir namoz uchun nechta minut oldin azon aytishni xohlaysiz? (0 = o'chirish)</p>
-            <div id="settings"></div>
+            <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz?</p>
+            <input type="number" id="minutesBefore" min="0" max="20" value="10">
+            <span style="font-size:1.2em;"> minut oldin</span><br><br>
+            <button onclick="saveSettings()">Sozlamani Saqlash</button>
         </div>
 
-        <button onclick="saveSettings()">Sozlamalarni Saqlash</button>
-        
-        <div class="status" id="status">Sozlamalar saqlanmagan</div>
-        
+        <div class="status" id="status"></div>
         <audio id="azonAudio" preload="auto"></audio>
     </div>
 
 <script>
-// Ma'lumotlar
+// Global o'zgaruvchilar
 let prayerTimes = {};
-let userSettings = {};
+let minutesBefore = 10;   // default 10 minut
 
 const prayers = [
     { name: "Bomdod", audio: "bomdod_azoni.mp3" },
@@ -104,23 +93,22 @@ const prayers = [
     { name: "Xufton", audio: "azon.mp3" }
 ];
 
-// data.json dan yuklash
+// data.json yuklash
 fetch('data.json')
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
         prayerTimes = data.masjidlar[0].vaqtlar;
-        loadSavedSettings();
+        loadSettings();
         renderPrayerTimes();
-        renderSettings();
         startChecker();
     })
-    .catch(err => {
-        console.error(err);
-        document.getElementById('prayerTimes').innerHTML = "<p style='color:red;text-align:center;'>data.json yuklanmadi!</p>";
+    .catch(() => {
+        document.getElementById('prayerTimes').innerHTML = 
+            '<p style="color:red;text-align:center;">Xatolik: data.json topilmadi!</p>';
     });
 
 function renderPrayerTimes() {
-    let html = '<h2 style="margin-top:20px;">Bugungi namoz vaqtlari</h2>';
+    let html = '<h2>Bugungi namoz vaqtlari</h2>';
     Object.keys(prayerTimes).forEach(name => {
         html += `
             <div class="prayer-time">
@@ -130,66 +118,43 @@ function renderPrayerTimes() {
     document.getElementById('prayerTimes').innerHTML = html;
 }
 
-function renderSettings() {
-    let html = '';
-    prayers.forEach(prayer => {
-        const time = prayerTimes[prayer.name] || '--:--';
-        const savedMin = userSettings[prayer.name] !== undefined ? userSettings[prayer.name] : 0;
-        
-        html += `
-            <div class="prayer-time">
-                <strong>${prayer.name} — ${time}</strong><br><br>
-                <label>
-                    Azonni 
-                    <input type="number" id="${prayer.name}_min" 
-                           value="${savedMin}" min="0" max="60">
-                    minut oldin aytish
-                </label>
-            </div>`;
-    });
-    document.getElementById('settings').innerHTML = html;
-}
-
 function saveSettings() {
-    prayers.forEach(prayer => {
-        const input = document.getElementById(prayer.name + '_min');
-        let minutes = parseInt(input.value);
-        if (isNaN(minutes) || minutes < 0) minutes = 0;
-        if (minutes > 60) minutes = 60;
-        userSettings[prayer.name] = minutes;
-    });
+    const input = document.getElementById('minutesBefore');
+    minutesBefore = parseInt(input.value) || 0;
+    
+    if (minutesBefore > 20) minutesBefore = 20;
+    if (minutesBefore < 0) minutesBefore = 0;
 
-    localStorage.setItem('azanSettings', JSON.stringify(userSettings));
-    document.getElementById('status').innerHTML = '✅ Sozlamalar saqlandi!';
-    setTimeout(() => {
-        document.getElementById('status').innerHTML = '';
-    }, 3000);
+    localStorage.setItem('minutesBefore', minutesBefore);
+    
+    document.getElementById('status').innerHTML = '✅ Sozlama saqlandi!';
+    setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
 }
 
-function loadSavedSettings() {
-    const saved = localStorage.getItem('azanSettings');
-    if (saved) {
-        userSettings = JSON.parse(saved);
+function loadSettings() {
+    const saved = localStorage.getItem('minutesBefore');
+    if (saved !== null) {
+        minutesBefore = parseInt(saved);
+        document.getElementById('minutesBefore').value = minutesBefore;
     }
 }
 
 function startChecker() {
-    setInterval(checkForAzon, 30000); // har 30 sekundda tekshirish
-    checkForAzon(); // darhol tekshirish
+    setInterval(checkForAzon, 30000); // har 30 sekundda
+    checkForAzon();
 }
 
 function checkForAzon() {
+    if (minutesBefore <= 0) return;
+
     const now = new Date();
     const currentTotalMin = now.getHours() * 60 + now.getMinutes();
 
     prayers.forEach(prayer => {
-        const minutesBefore = userSettings[prayer.name];
-        if (!minutesBefore || minutesBefore <= 0) return;
+        const prayerTimeStr = prayerTimes[prayer.name];
+        if (!prayerTimeStr) return;
 
-        const prayerTime = prayerTimes[prayer.name];
-        if (!prayerTime) return;
-
-        const [h, m] = prayerTime.split(':').map(Number);
+        const [h, m] = prayerTimeStr.split(':').map(Number);
         const prayerTotalMin = h * 60 + m;
 
         if (currentTotalMin === prayerTotalMin - minutesBefore) {
@@ -202,16 +167,9 @@ function playAzon(audioFile, prayerName) {
     const audio = document.getElementById('azonAudio');
     audio.src = audioFile;
     audio.play().then(() => {
-        console.log(`${prayerName} uchun azon chalindi!`);
-    }).catch(err => {
-        console.log("Audio ijro etilmadi:", err);
-    });
+        console.log(`✅ ${prayerName} uchun azon chalindi (${minutesBefore} minut oldin)`);
+    }).catch(err => console.log("Audio xatosi:", err));
 }
-
-// Sahifa yuklanganda
-window.onload = () => {
-    // agar kerak bo'lsa qo'shimcha kod
-};
 </script>
 </body>
 </html>
