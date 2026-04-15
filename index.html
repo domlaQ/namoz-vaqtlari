@@ -20,8 +20,29 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        h1 { text-align: center; color: #1e88e5; }
-        h2 { color: #555; }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            margin: 0;
+            color: #1e88e5;
+            font-size: 2.2em;
+        }
+        .masjid-icon {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+        h2 {
+            text-align: center;
+            color: #555;
+            margin: 5px 0 20px 0;
+        }
         .prayer-time {
             background: #f8fbff;
             padding: 15px;
@@ -33,7 +54,7 @@
         .setting-box {
             background: #f8fbff;
             padding: 20px;
-            margin: 20px 0;
+            margin: 25px 0;
             border-radius: 10px;
             text-align: center;
         }
@@ -57,22 +78,34 @@
             width: 100%;
         }
         button:hover { background: #1565c0; }
-        .status { text-align: center; margin: 10px 0; font-weight: bold; }
+        .status { 
+            text-align: center; 
+            margin: 15px 0; 
+            font-weight: bold; 
+            color: #1e88e5;
+        }
         audio { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🕌 Namoz Vaqtlari</h1>
-        <h2 style="text-align:center;">Ettichinor Jome' Masjidi</h2>
+        <!-- Yangi header - masjid ramzi bilan -->
+        <div class="header">
+            <img src="https://i.imgur.com/8zJ0z3K.png" alt="Masjid" class="masjid-icon">
+            <h1>Namoz Vaqtlari</h1>
+        </div>
+        
+        <h2>Ettichinor Jome' Masjidi</h2>
 
         <div id="prayerTimes"></div>
 
         <div class="setting-box">
             <h2>Azonni oldindan eshitish</h2>
-            <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz?</p>
+            <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz? (0-20 minut)</p>
+            
             <input type="number" id="minutesBefore" min="0" max="20" value="10">
             <span style="font-size:1.2em;"> minut oldin</span><br><br>
+            
             <button onclick="saveSettings()">Sozlamani Saqlash</button>
         </div>
 
@@ -83,7 +116,7 @@
 <script>
 // Global o'zgaruvchilar
 let prayerTimes = {};
-let minutesBefore = 10;   // default 10 minut
+let minutesBefore = 10;
 
 const prayers = [
     { name: "Bomdod", audio: "bomdod_azoni.mp3" },
@@ -127,7 +160,7 @@ function saveSettings() {
 
     localStorage.setItem('minutesBefore', minutesBefore);
     
-    document.getElementById('status').innerHTML = '✅ Sozlama saqlandi!';
+    document.getElementById('status').innerHTML = '✅ Sozlama muvaffaqiyatli saqlandi!';
     setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
 }
 
@@ -140,7 +173,7 @@ function loadSettings() {
 }
 
 function startChecker() {
-    setInterval(checkForAzon, 30000); // har 30 sekundda
+    setInterval(checkForAzon, 30000);
     checkForAzon();
 }
 
@@ -167,7 +200,7 @@ function playAzon(audioFile, prayerName) {
     const audio = document.getElementById('azonAudio');
     audio.src = audioFile;
     audio.play().then(() => {
-        console.log(`✅ ${prayerName} uchun azon chalindi (${minutesBefore} minut oldin)`);
+        console.log(`✅ ${prayerName} uchun azon chalindi`);
     }).catch(err => console.log("Audio xatosi:", err));
 }
 </script>
