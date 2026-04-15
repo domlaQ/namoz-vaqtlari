@@ -21,46 +21,45 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+            margin-right: 8px;
         }
         .header h1 {
+            display: inline-block;
             margin: 0;
             color: #1e88e5;
-            font-size: 2.1em;
-        }
-        .masjid-icon {
-            width: 65px;
-            height: 65px;
-            object-fit: contain;
+            font-size: 2em;
         }
         h2 {
             text-align: center;
             color: #555;
-            margin: 5px 0 20px 0;
+            margin: 10px 0 25px 0;
         }
         .prayer-time {
             background: #f8fbff;
             padding: 15px;
-            margin: 12px 0;
+            margin: 10px 0;
             border-radius: 8px;
             border-left: 5px solid #1e88e5;
             font-size: 1.1em;
         }
         .setting-box {
             background: #f8fbff;
-            padding: 20px;
+            padding: 25px;
             margin: 25px 0;
             border-radius: 10px;
             text-align: center;
         }
         input[type="number"] {
-            width: 80px;
+            width: 85px;
             padding: 10px;
-            font-size: 1.3em;
+            font-size: 1.4em;
             text-align: center;
             border: 2px solid #1e88e5;
             border-radius: 8px;
@@ -74,7 +73,7 @@
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
-            margin-top: 15px;
+            margin-top: 20px;
         }
         button:hover {
             background: #1565c0;
@@ -85,16 +84,14 @@
             font-weight: bold;
             color: #1e88e5;
         }
-        audio {
-            display: none;
-        }
+        audio { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header - masjid ramzi bilan -->
+        <!-- Header - kichik masjid ikonasi bilan -->
         <div class="header">
-            <img src="https://i.imgur.com/8zJ0z3K.png" alt="Masjid" class="masjid-icon">
+            <img src="https://i.imgur.com/8zJ0z3K.png" alt="Masjid">
             <h1>Namoz Vaqtlari</h1>
         </div>
         
@@ -107,7 +104,7 @@
             <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz? (0 dan 20 minutgacha)</p>
             
             <input type="number" id="minutesBefore" min="0" max="20" value="10">
-            <span style="font-size:1.2em;"> minut oldin</span><br><br>
+            <span style="font-size: 1.2em;"> minut oldin</span><br><br>
             
             <button onclick="saveSettings()">Sozlamani Saqlash</button>
         </div>
@@ -138,10 +135,9 @@ fetch('data.json')
         renderPrayerTimes();
         startChecker();
     })
-    .catch(err => {
-        console.error(err);
+    .catch(() => {
         document.getElementById('prayerTimes').innerHTML = 
-            '<p style="color:red; text-align:center;">data.json yuklanmadi!</p>';
+            '<p style="color:red;text-align:center;">data.json yuklanmadi!</p>';
     });
 
 function renderPrayerTimes() {
@@ -158,29 +154,26 @@ function renderPrayerTimes() {
 function saveSettings() {
     const input = document.getElementById('minutesBefore');
     minutesBefore = parseInt(input.value) || 0;
-    
     if (minutesBefore > 20) minutesBefore = 20;
     if (minutesBefore < 0) minutesBefore = 0;
 
     localStorage.setItem('minutesBefore', minutesBefore);
     
     document.getElementById('status').innerHTML = '✅ Sozlama saqlandi!';
-    setTimeout(() => {
-        document.getElementById('status').innerHTML = '';
-    }, 3000);
+    setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
 }
 
 function loadSettings() {
     const saved = localStorage.getItem('minutesBefore');
-    if (saved !== null) {
+    if (saved) {
         minutesBefore = parseInt(saved);
         document.getElementById('minutesBefore').value = minutesBefore;
     }
 }
 
 function startChecker() {
-    setInterval(checkForAzon, 30000); // har 30 sekundda tekshirish
-    checkForAzon(); // darhol tekshirish
+    setInterval(checkForAzon, 30000);
+    checkForAzon();
 }
 
 function checkForAzon() {
@@ -205,11 +198,7 @@ function checkForAzon() {
 function playAzon(audioFile, prayerName) {
     const audio = document.getElementById('azonAudio');
     audio.src = audioFile;
-    audio.play().then(() => {
-        console.log(`✅ ${prayerName} uchun azon chalindi (${minutesBefore} minut oldin)`);
-    }).catch(err => {
-        console.log("Audio ijro etilmadi:", err);
-    });
+    audio.play().catch(err => console.log("Audio xatosi:", err));
 }
 </script>
 </body>
