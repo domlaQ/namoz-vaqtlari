@@ -25,17 +25,16 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            margin-bottom: 10px;
         }
         .header h1 {
             margin: 0;
             color: #1e88e5;
-            font-size: 2.2em;
+            font-size: 2.1em;
         }
         .masjid-icon {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             object-fit: contain;
         }
         h2 {
@@ -46,7 +45,7 @@
         .prayer-time {
             background: #f8fbff;
             padding: 15px;
-            margin: 10px 0;
+            margin: 12px 0;
             border-radius: 8px;
             border-left: 5px solid #1e88e5;
             font-size: 1.1em;
@@ -74,22 +73,26 @@
             font-size: 1.1em;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 15px;
             width: 100%;
+            margin-top: 15px;
         }
-        button:hover { background: #1565c0; }
-        .status { 
-            text-align: center; 
-            margin: 15px 0; 
-            font-weight: bold; 
+        button:hover {
+            background: #1565c0;
+        }
+        .status {
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
             color: #1e88e5;
         }
-        audio { display: none; }
+        audio {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Yangi header - masjid ramzi bilan -->
+        <!-- Header - masjid ramzi bilan -->
         <div class="header">
             <img src="https://i.imgur.com/8zJ0z3K.png" alt="Masjid" class="masjid-icon">
             <h1>Namoz Vaqtlari</h1>
@@ -101,7 +104,7 @@
 
         <div class="setting-box">
             <h2>Azonni oldindan eshitish</h2>
-            <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz? (0-20 minut)</p>
+            <p>Namoz vaqtidan nechta minut oldin azon aytishni xohlaysiz? (0 dan 20 minutgacha)</p>
             
             <input type="number" id="minutesBefore" min="0" max="20" value="10">
             <span style="font-size:1.2em;"> minut oldin</span><br><br>
@@ -114,7 +117,7 @@
     </div>
 
 <script>
-// Global o'zgaruvchilar
+// Ma'lumotlar
 let prayerTimes = {};
 let minutesBefore = 10;
 
@@ -135,9 +138,10 @@ fetch('data.json')
         renderPrayerTimes();
         startChecker();
     })
-    .catch(() => {
+    .catch(err => {
+        console.error(err);
         document.getElementById('prayerTimes').innerHTML = 
-            '<p style="color:red;text-align:center;">Xatolik: data.json topilmadi!</p>';
+            '<p style="color:red; text-align:center;">data.json yuklanmadi!</p>';
     });
 
 function renderPrayerTimes() {
@@ -160,8 +164,10 @@ function saveSettings() {
 
     localStorage.setItem('minutesBefore', minutesBefore);
     
-    document.getElementById('status').innerHTML = '✅ Sozlama muvaffaqiyatli saqlandi!';
-    setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
+    document.getElementById('status').innerHTML = '✅ Sozlama saqlandi!';
+    setTimeout(() => {
+        document.getElementById('status').innerHTML = '';
+    }, 3000);
 }
 
 function loadSettings() {
@@ -173,8 +179,8 @@ function loadSettings() {
 }
 
 function startChecker() {
-    setInterval(checkForAzon, 30000);
-    checkForAzon();
+    setInterval(checkForAzon, 30000); // har 30 sekundda tekshirish
+    checkForAzon(); // darhol tekshirish
 }
 
 function checkForAzon() {
@@ -200,8 +206,10 @@ function playAzon(audioFile, prayerName) {
     const audio = document.getElementById('azonAudio');
     audio.src = audioFile;
     audio.play().then(() => {
-        console.log(`✅ ${prayerName} uchun azon chalindi`);
-    }).catch(err => console.log("Audio xatosi:", err));
+        console.log(`✅ ${prayerName} uchun azon chalindi (${minutesBefore} minut oldin)`);
+    }).catch(err => {
+        console.log("Audio ijro etilmadi:", err);
+    });
 }
 </script>
 </body>
