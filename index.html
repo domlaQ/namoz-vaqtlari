@@ -3,252 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namoz Vaqtlari</title>
+    <title>Namoz Vaqtlari - Ettichinor Jome' Masjidi</title>
     <style>
-        :root { 
-            --gold: #e2b07e; 
-            --bg: #0a0a0a; 
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f7ff, #e0f0ff);
+            margin: 0;
+            padding: 15px;
+            color: #333;
         }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at top, #222 0%, #0a0a0a 60%);
-            color: var(--gold); 
-            margin: 0; 
-            padding: 10px; 
-            display: flex;
-            justify-content: center;
+        h1 {
+            text-align: center;
+            color: #1e88e5;
         }
-        .container { width: 100%; max-width: 380px; }
-        
-        .header { 
-            text-align: center; 
-            padding: 15px 0 10px 0; 
-            margin-bottom: 5px;
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .header h1 { font-size: 1.3rem; margin: 0; font-weight: normal; opacity: 0.9; }
-
-        .m-nomi { 
-            font-size: 1.1rem; 
-            text-align: center; 
-            margin-bottom: 15px; 
-            display: block;
-            opacity: 0.8;
+        .prayer-time {
+            background: #f8fbff;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+            border-left: 5px solid #1e88e5;
         }
-
-        /* Satrlar orasini yaqinlashtirish */
-        .vaqt-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 8px 15px; /* Satr ichidagi masofa kamaytirildi */
-            margin-bottom: 2px; /* Satrlar orasidagi masofa minimal qilindi */
-        }
-
-        .vaqt-nomi { 
-            font-size: 1.5rem; /* Katta harf */
-            font-weight: 500; 
-        }
-        .soat { 
-            font-size: 1.7rem; /* Katta son */
-            font-weight: bold; 
-            letter-spacing: 1px;
-        }
-
-        #status { 
-            text-align: center; 
-            font-size: 0.7rem; 
-            color: rgba(226, 176, 126, 0.4); 
+        .settings {
             margin-top: 25px;
         }
-
-        /* Azon chalayotganda */
-        .azon-chalmoqda {
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        #azon-holat {
-            text-align: center;
-            font-size: 0.9rem;
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(226, 176, 126, 0.1);
-            border-radius: 8px;
-            display: none;
-        }
-
-        .test-tugma {
+        label {
             display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: var(--gold);
-            color: var(--bg);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
+            margin: 12px 0;
+            font-size: 1.05em;
         }
-        .test-tugma:hover {
-            opacity: 0.8;
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #1e88e5;
+            border-radius: 6px;
+        }
+        button {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #666;
+        }
+        audio {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="app"></div>
-        <div id="azon-holat"></div>
-        <button class="test-tugma" onclick="testAudio()">🔊 Azonni sinash</button>
-        <div id="status"></div>
+        <h1>🕌 Namoz Vaqtlari</h1>
+        <h2 style="text-align:center; color:#555;">Ettichinor Jome' Masjidi</h2>
+        
+        <div id="prayerTimes"></div>
+
+        <div class="settings">
+            <h2>Azonni oldindan eshitish</h2>
+            <p style="color:#555; font-size:0.95em;">Har bir namoz uchun nechta minut oldin azon aytishni xohlaysiz? (0 = o'chirish)</p>
+            <div id="settings"></div>
+        </div>
+
+        <button onclick="saveSettings()">Sozlamalarni Saqlash</button>
+        
+        <div class="status" id="status">Sozlamalar saqlanmagan</div>
+        
+        <audio id="azonAudio" preload="auto"></audio>
     </div>
 
-    <!-- Audio fayllari -->
-    <audio id="audio-bomdod" preload="auto">
-        <source src="bomdod_azoni.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="audio-umumiy" preload="auto">
-        <source src="azon.mp3" type="audio/mpeg">
-    </audio>
+<script>
+// Ma'lumotlar
+let prayerTimes = {};
+let userSettings = {};
 
-    <script>
-        const url = "data.json";
+const prayers = [
+    { name: "Bomdod", audio: "bomdod_azoni.mp3" },
+    { name: "Peshin", audio: "azon.mp3" },
+    { name: "Asr",    audio: "azon.mp3" },
+    { name: "Shom",   audio: "azon.mp3" },
+    { name: "Xufton", audio: "azon.mp3" }
+];
+
+// data.json dan yuklash
+fetch('data.json')
+    .then(response => response.json())
+    .then(data => {
+        prayerTimes = data.masjidlar[0].vaqtlar;
+        loadSavedSettings();
+        renderPrayerTimes();
+        renderSettings();
+        startChecker();
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById('prayerTimes').innerHTML = "<p style='color:red;text-align:center;'>data.json yuklanmadi!</p>";
+    });
+
+function renderPrayerTimes() {
+    let html = '<h2 style="margin-top:20px;">Bugungi namoz vaqtlari</h2>';
+    Object.keys(prayerTimes).forEach(name => {
+        html += `
+            <div class="prayer-time">
+                <strong>${name}</strong> — ${prayerTimes[name]}
+            </div>`;
+    });
+    document.getElementById('prayerTimes').innerHTML = html;
+}
+
+function renderSettings() {
+    let html = '';
+    prayers.forEach(prayer => {
+        const time = prayerTimes[prayer.name] || '--:--';
+        const savedMin = userSettings[prayer.name] !== undefined ? userSettings[prayer.name] : 0;
         
-        // Azon chalgan vaqtlarni saqlash
-        const chalganVaqtlar = {
-            Bomdod: false,
-            Peshin: false,
-            Asr: false,
-            Shom: false,
-            Xufton: false
-        };
+        html += `
+            <div class="prayer-time">
+                <strong>${prayer.name} — ${time}</strong><br><br>
+                <label>
+                    Azonni 
+                    <input type="number" id="${prayer.name}_min" 
+                           value="${savedMin}" min="0" max="60">
+                    minut oldin aytish
+                </label>
+            </div>`;
+    });
+    document.getElementById('settings').innerHTML = html;
+}
 
-        // Hozirgi vaqtni "HH:MM" formatda qaytarish
-        function hozirgiVaqt() {
-            const hozir = new Date();
-            const soat = String(hozir.getHours()).padStart(2, '0');
-            const daqiqa = String(hozir.getMinutes()).padStart(2, '0');
-            return `${soat}:${daqiqa}`;
+function saveSettings() {
+    prayers.forEach(prayer => {
+        const input = document.getElementById(prayer.name + '_min');
+        let minutes = parseInt(input.value);
+        if (isNaN(minutes) || minutes < 0) minutes = 0;
+        if (minutes > 60) minutes = 60;
+        userSettings[prayer.name] = minutes;
+    });
+
+    localStorage.setItem('azanSettings', JSON.stringify(userSettings));
+    document.getElementById('status').innerHTML = '✅ Sozlamalar saqlandi!';
+    setTimeout(() => {
+        document.getElementById('status').innerHTML = '';
+    }, 3000);
+}
+
+function loadSavedSettings() {
+    const saved = localStorage.getItem('azanSettings');
+    if (saved) {
+        userSettings = JSON.parse(saved);
+    }
+}
+
+function startChecker() {
+    setInterval(checkForAzon, 30000); // har 30 sekundda tekshirish
+    checkForAzon(); // darhol tekshirish
+}
+
+function checkForAzon() {
+    const now = new Date();
+    const currentTotalMin = now.getHours() * 60 + now.getMinutes();
+
+    prayers.forEach(prayer => {
+        const minutesBefore = userSettings[prayer.name];
+        if (!minutesBefore || minutesBefore <= 0) return;
+
+        const prayerTime = prayerTimes[prayer.name];
+        if (!prayerTime) return;
+
+        const [h, m] = prayerTime.split(':').map(Number);
+        const prayerTotalMin = h * 60 + m;
+
+        if (currentTotalMin === prayerTotalMin - minutesBefore) {
+            playAzon(prayer.audio, prayer.name);
         }
+    });
+}
 
-        // Vaqtni soniyaga aylantirish
-        function vaqtSoniyaga(vaqt) {
-            const [soat, daqiqa] = vaqt.split(':').map(Number);
-            return soat * 3600 + daqiqa * 60;
-        }
+function playAzon(audioFile, prayerName) {
+    const audio = document.getElementById('azonAudio');
+    audio.src = audioFile;
+    audio.play().then(() => {
+        console.log(`${prayerName} uchun azon chalindi!`);
+    }).catch(err => {
+        console.log("Audio ijro etilmadi:", err);
+    });
+}
 
-        // Azon chalish
-        function azonChalish(nomozNomi) {
-            const holatDiv = document.getElementById('azon-holat');
-            
-            let audioElement;
-            if (nomozNomi === 'Bomdod') {
-                audioElement = document.getElementById('audio-bomdod');
-            } else {
-                audioElement = document.getElementById('audio-umumiy');
-            }
-
-            holatDiv.style.display = 'block';
-            holatDiv.innerHTML = `🔊 <strong>${nomozNomi}</strong> namozi vaqti bo'ldi! Azon aytilmoqda...`;
-            holatDiv.classList.add('azon-chalmoqda');
-
-            audioElement.volume = 1.0;
-            audioElement.play().catch(xatolik => {
-                console.log('Audio chalishda xato:', xatolik);
-            });
-
-            // Azon tugagach
-            audioElement.onended = function() {
-                holatDiv.classList.remove('azon-chalmoqda');
-                holatDiv.innerHTML = `✅ ${nomozNomi} namozi vaqti bo'ldi. Azon tugadi.`;
-                setTimeout(() => {
-                    holatDiv.style.display = 'none';
-                }, 30000);
-            };
-        }
-
-        // Namoz vaqtini tekshirish
-        function vaqtniTekshirish(masjid) {
-            const hozir = hozirgiVaqt();
-            const hozirSoniyada = vaqtSoniyaga(hozir);
-
-            for (let nomoz in masjid.vaqtlar) {
-                const vaqt = masjid.vaqtlar[nomoz];
-                const vaqtSoniyada = vaqtSoniyaga(vaqt);
-
-                // Agar vaqt mos kelganda va hali azon chalmagan bo'lsa
-                if (hozirSoniyada === vaqtSoniyada && !chalganVaqtlar[nomoz]) {
-                    chalganVaqtlar[nomoz] = true;
-                    azonChalish(nomoz);
-                }
-
-                // Eski timezone'ni qayta tiklash (har 1 daqiqadan keyin)
-                if (hozirSoniyada > vaqtSoniyada + 60) {
-                    chalganVaqtlar[nomoz] = false;
-                }
-            }
-        }
-
-        // Test audio
-        function testAudio() {
-            const hozir = hozirgiVaqt();
-            const soat = parseInt(hozir.split(':')[0]);
-            let audioElement;
-            
-            if (soat >= 5 && soat < 12) {
-                audioElement = document.getElementById('audio-bomdod');
-                azonChalish('Bomdod');
-            } else {
-                audioElement = document.getElementById('audio-umumiy');
-                azonChalish('Peshin');
-            }
-        }
-
-        async function yuklash() {
-            try {
-                const javob = await fetch(url + "?t=" + Date.now());
-                const m = await javob.json();
-                let html = "";
-                m.masjidlar.forEach(masjid => {
-                    // Sarlavha: Namoz vaqtlari va sana
-                    html += `<div class="header"><h1>Namoz vaqtlari: ${m.last_update.split(' ')[0]}</h1></div>`;
-                    html += `<span class="m-nomi">${masjid.nomi}</span>`;
-                    
-                    for (let v in masjid.vaqtlar) {
-                        html += `
-                        <div class="vaqt-row">
-                            <span class="vaqt-nomi">${v}</span>
-                            <span class="soat">${masjid.vaqtlar[v]}</span>
-                        </div>`;
-                    }
-                });
-                document.getElementById('app').innerHTML = html;
-                document.getElementById('status').innerText = "Yangilandi: " + m.last_update;
-
-                // Vaqtni tekshirish
-                m.masjidlar.forEach(masjid => {
-                    vaqtniTekshirish(masjid);
-                });
-
-            } catch (x) {
-                document.getElementById('app').innerHTML = "<p style='text-align:center'>Yuklashda xato...</p>";
-            }
-        }
-
-        // Har 5 soniyada vaqtni tekshirish
-        yuklash();
-        setInterval(yuklash, 60000);
-        setInterval(() => {
-            fetch(url + "?t=" + Date.now())
-                .then(r => r.json())
-                .then(m => {
-                    m.masjidlar.forEach(masjid => {
-                        vaqtniTekshirish(masjid);
-                    });
-                });
-        }, 5000);
-    </script>
+// Sahifa yuklanganda
+window.onload = () => {
+    // agar kerak bo'lsa qo'shimcha kod
+};
+</script>
 </body>
 </html>
